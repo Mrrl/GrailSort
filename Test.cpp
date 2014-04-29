@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <algorithm>
 
 typedef struct{
 	int key;
@@ -67,16 +68,23 @@ void qtest(SORT_TYPE *arr,int Len){
 	qsort(arr,Len,sizeof(SORT_TYPE),xcmp);
 }
 
+bool xlt(SORT_TYPE a,SORT_TYPE b){
+	return SORT_CMP(&a,&b)<0;
+}
+
+void qsttest(SORT_TYPE *arr,int Len){
+	std::stable_sort(arr,arr+Len,xlt);
+}
+
 void Check(SORT_TYPE *arr,int *KeyCntr,int Len,int NKey,bool alg){
 	GenArray(arr,KeyCntr,Len,NKey);
-	printf("%s N: %d, NK: %d ",alg ? "GrailSort:   " : "InPlaceMerge:",Len,NKey);
+	printf("%s N: %d, NK: %d ",alg ? "GrailSort:   " : "StableSort:",Len,NKey);
 	//PrintArray("Input",arr,Len);
 	NCmps=0;
 	long ct=clock();
-	if(alg) GrailSort(arr,Len);
+	if(alg) GrailSortWithBuffer(arr,Len);
 	else{
-		RecStableSort(arr,Len);
-		//qtest(arr,Len);
+		qsttest(arr,Len);
 	}
 	printf("Cmps: %I64d, time: %ld ms ",NCmps,clock()-ct);
 	bool ok=TestArray(arr,Len);
@@ -101,7 +109,9 @@ void main(){
 	*/
 	for(int u=100;u<=NMax;u*=10){
 		for(int v=2;v<=u && v<=NMaxKey;v*=2){
+			int h=seed;
 			Check(A,Keys,u,v-1,false);
+			seed=h;
 			Check(A,Keys,u,v-1,true);
 		}
 	}
