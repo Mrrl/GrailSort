@@ -82,7 +82,7 @@ void Check(SORT_TYPE *arr,int *KeyCntr,int Len,int NKey,bool alg){
 	//PrintArray("Input",arr,Len);
 	NCmps=0;
 	long ct=clock();
-	if(alg) GrailSortWithBuffer(arr,Len);
+	if(alg) GrailSort(arr,Len);
 	else{
 		qsttest(arr,Len);
 	}
@@ -95,11 +95,18 @@ void Check(SORT_TYPE *arr,int *KeyCntr,int Len,int NKey,bool alg){
 	}
 }
 
+void CheckTwo(SORT_TYPE *A,int *Keys,int L,int NK){
+	int h=seed;
+	Check(A,Keys,L,NK,false);
+	seed=h;
+	Check(A,Keys,L,NK,true);
+}
+
 
 
 void main(){
 	int NMax=100000000;
-	int NMaxKey=100000;
+	int NMaxKey=200000;
 	SORT_TYPE *A=new SORT_TYPE[NMax];
 	int *Keys=new int[NMaxKey];
 
@@ -107,13 +114,27 @@ void main(){
 	Check(A,Keys,NMax,0,false);
 	Check(A,Keys,NMax,0,true);
 	*/
+
+#if 0
 	for(int u=100;u<=NMax;u*=10){
 		for(int v=2;v<=u && v<=NMaxKey;v*=2){
-			int h=seed;
-			Check(A,Keys,u,v-1,false);
-			seed=h;
-			Check(A,Keys,u,v-1,true);
+			CheckTwo(A,Keys,u,v-1);
 		}
 	}
+#else
+	CheckTwo(A,Keys,1000000,1023);
+	CheckTwo(A,Keys,1000000,2047);
+	CheckTwo(A,Keys,10000000,4095);
+	CheckTwo(A,Keys,10000000,8191);
+	CheckTwo(A,Keys,100000000,16383);
+	CheckTwo(A,Keys,100000000,32767);
+	CheckTwo(A,Keys,100000000,32767);
+	CheckTwo(A,Keys,100000000,16383);
+	CheckTwo(A,Keys,10000000,8191);
+	CheckTwo(A,Keys,10000000,4095);
+	CheckTwo(A,Keys,1000000,2047);
+	CheckTwo(A,Keys,1000000,1023);
+
+#endif
 }
 
