@@ -9,12 +9,19 @@
 /* Define SORT_TYPE and SORT_CMP                         */
 /* and then call GrailSort() function                    */
 /*                                                       */
+/* For sorting with fixed external buffer (512 items)    */
+/* use GrailSortWithBuffer()                             */
+/*                                                       */
+/* For sorting with dynamic external buffer (O(sqrt(N)) items) */
+/* use GrailSortWithDynBuffer()                          */
+/*                                                       */
 /* Also classic in-place merge sort is implemented       */
 /* under the name of RecStableSort()                     */
 /*                                                       */
 /*********************************************************/
 
 #include<memory.h>
+#include<malloc.h>
 #define GRAIL_EXT_BUFFER_LENGTH 512
 
 inline void grail_swap1(SORT_TYPE *a,SORT_TYPE *b){
@@ -486,7 +493,11 @@ void grail_commonSort(SORT_TYPE *arr,int Len,SORT_TYPE *extbuf,int LExtBuf){
 				lb=(2*cbuf)/nk;
 			}
 		} else{
-			while(lb*lb>2*cbuf) lb/=2;  // set size of block close to sqrt(new_block_length)
+#if 0
+			if(LExtBuf!=0){
+				while(lb>LExtBuf && lb*lb>2*cbuf) lb/=2;  // set size of block close to sqrt(new_block_length)
+			}
+#endif
 		}
 		grail_CombineBlocks(arr,arr+ptr,Len-ptr,cbuf,lb,chavebuf,chavebuf && lb<=LExtBuf ? extbuf : NULL);
 	}
@@ -502,6 +513,18 @@ void GrailSortWithBuffer(SORT_TYPE *arr,int Len){
 	SORT_TYPE ExtBuf[GRAIL_EXT_BUFFER_LENGTH];
 	grail_commonSort(arr,Len,ExtBuf,GRAIL_EXT_BUFFER_LENGTH);
 }
+void GrailSortWithDynBuffer(SORT_TYPE *arr,int Len){
+	int L=1;
+	SORT_TYPE *ExtBuf;
+	while(L*L<Len) L*=2;
+	ExtBuf=(SORT_TYPE*)malloc(L*sizeof(SORT_TYPE));
+	if(ExtBuf==NULL) GrailSortWithBuffer(arr,Len);
+	else{
+		grail_commonSort(arr,Len,ExtBuf,L);
+		free(ExtBuf);
+	}
+}
+
 
 
 /****** classic MergeInPlace *************/
