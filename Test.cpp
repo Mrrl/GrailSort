@@ -1,140 +1,166 @@
 #include <stdio.h>
 #include <time.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <algorithm>
 
 typedef struct{
 	int key;
 	int val;
-} str64;
+} key_val_pair;
 
-long long NCmps;
+long long comps;
 
-int cmp64(const str64 *a,const str64 *b){
-	NCmps++;
-	if(a->key<b->key) return -1;
-	if(a->key>b->key) return 1;
-	return 0;
+inline int compare(const key_val_pair* a, const key_val_pair* b) {
+	comps++;
+
+	if(a->key < b->key) return (-1);
+	else if(a->key > b->key) return (1);
+	else return (0);
 }
 
-#define SORT_TYPE str64
-#define SORT_CMP cmp64
+#define GRAIL_SORT_TYPE key_val_pair
+#define GRAIL_SORT_COMPARE compare
 
-#include"GrailSort.h"
+#include "GrailSort.h"
 
 /******** Tests *********/
 
-int seed=100000001;
-int rand(int k){
-	seed=seed*1234565+1;
-	return (int)(((long long)(seed&0x7fffffff)*k)>>31);
+int seed = 100000001;
+int rand(int k) {
+	seed = seed * 1234565 + 1;
+	return ((int) (((long long) (seed & 0x7fffffff) * k) >> 31));
 }
 
 
-void GenArray(SORT_TYPE *arr,int *KeyCntr,int Len,int NKey){
-	for(int i=0;i<NKey;i++) KeyCntr[i]=0;
-	for(int i=0;i<Len;i++){
-		if(NKey){
-			int key=rand(NKey);
-			arr[i].key=key;
-			arr[i].val=KeyCntr[key]++;
-		} else{
-			arr[i].key=rand(1000000000);
-			arr[i].val=0;
+void generate_array(GRAIL_SORT_TYPE* arr, int* key_center, int length, int key_count) {
+	for(int i = 0; i < key_count; i++) key_center[i] = 0;
+
+	for(int i = 0; i < length; i++) {
+		if(key_count) {
+			int key = rand(key_count);
+			arr[i].key = key;
+			arr[i].val = key_center[key]++;
+		} 
+		else {
+			arr[i].key = rand(1000000000);
+			arr[i].val = 0;
 		}
 	}
 }
 
-bool TestArray(SORT_TYPE *arr,int Len){
-	for(int i=1;i<Len;i++){
-		int dk=SORT_CMP(arr+(i-1),arr+i);
-		if(dk>0) return false;
-		if(dk==0 && arr[i-1].val>arr[i].val) return false;
+bool test_array(GRAIL_SORT_TYPE* arr, int length) {
+	for(int i = 1; i < length; i++) {
+		int dk = GRAIL_SORT_COMPARE(arr + (i - 1), arr + i);
+
+		if(dk > 0) return (false);
+		else if(dk == 0 && arr[i - 1].val > arr[i].val) return (false);
 	}
-	return true;
+	return (true);
 }
 
-void PrintArray(char *s,SORT_TYPE *arr,int Len){
-	printf("%s:",s);
-	for(int i=0;i<Len;i++) printf(" %d:%d",arr[i].key,arr[i].val);
+void print_array(char* s, GRAIL_SORT_TYPE* arr, int length) {
+	printf("%s:", s);
+	for(int i = 0; i < length; i++) printf(" %d:%d", arr[i].key, arr[i].val);
 	printf("\n");
 }
 
-extern "C" int xcmp(const void *a,const void *b){
-	return SORT_CMP((const SORT_TYPE *)a,(const SORT_TYPE *)b);
+extern "C" int extern_comp(const void* a, const void* b) {
+	return (GRAIL_SORT_COMPARE((const GRAIL_SORT_TYPE*) a, (const GRAIL_SORT_TYPE*) b));
 }
 
-void qtest(SORT_TYPE *arr,int Len){
-	qsort(arr,Len,sizeof(SORT_TYPE),xcmp);
+void quick_sort_test(GRAIL_SORT_TYPE* arr, int length) {
+	qsort(arr, length, sizeof(GRAIL_SORT_TYPE), extern_comp);
 }
 
-bool xlt(SORT_TYPE a,SORT_TYPE b){
-	return SORT_CMP(&a,&b)<0;
+bool stable_comp(GRAIL_SORT_TYPE a, GRAIL_SORT_TYPE b) {
+	return (GRAIL_SORT_COMPARE(&a, &b) < 0);
 }
 
-void qsttest(SORT_TYPE *arr,int Len){
-	std::stable_sort(arr,arr+Len,xlt);
+void stable_sort_test(GRAIL_SORT_TYPE* arr, int length) {
+	std::stable_sort(arr, arr + length, stable_comp);
 }
 
-void Check(SORT_TYPE *arr,int *KeyCntr,int Len,int NKey,bool alg){
-	GenArray(arr,KeyCntr,Len,NKey);
-	printf("%s N: %d, NK: %d ",alg ? "GrailSort:   " : "StableSort:",Len,NKey);
-	//PrintArray("Input",arr,Len);
-	NCmps=0;
-	long ct=clock();
-	if(alg) GrailSort(arr,Len);
-	else{
-		qsttest(arr,Len);
+void rec_stable_sort_test(GRAIL_SORT_TYPE* arr, int length) {
+	rec_stable_sort(arr, length);
+}
+
+void sort_test(GRAIL_SORT_TYPE* arr, int* key_center, int length, int key_count, bool run_grail) {
+	uint64_t nanos;
+	struct timespec start, end;
+
+	generate_array(arr, key_center, length, key_count);
+
+	printf("%s N: %d, NK: %d ", run_grail ? "GrailSort:   " : "StableSort:", length, key_count);
+
+	comps = 0;
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	if(run_grail) {
+		grail_sort(arr, length);
+		//grail_sort_with_static_buffer(arr, length);
+	    //grail_sort_with_dynamic_buffer(arr, length;
 	}
-	printf("Cmps: %I64d, time: %ld ms ",NCmps,clock()-ct);
-	bool ok=TestArray(arr,Len);
-	if(ok){
-		printf("Ok\n");
+	else {
+		stable_sort_test(arr, length);
+		//rec_stable_sort_test(arr, length);
+	}
+
+	clock_gettime(CLOCK_MONOTONIC, &end);
+
+	nanos = 1e+9 * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
+	float time_taken_in_ms = nanos / 1e+6;
+
+	printf("Comparisons: %I64d, Real time: %f ms ", comps, time_taken_in_ms);
+
+	bool array_sorted = test_array(arr, length);
+
+	if(array_sorted) {
+		printf("Sort was successful\n");
 	} else{
-		printf("Fail\n");
+		printf("Sort was NOT successful\n");
 	}
 }
 
-void CheckTwo(SORT_TYPE *A,int *Keys,int L,int NK){
-	int h=seed;
-	Check(A,Keys,L,NK,false);
-	seed=h;
-	Check(A,Keys,L,NK,true);
+void test_two_sorts(GRAIL_SORT_TYPE* arr, int* key_arr, int length, int key_count) {
+	int h = seed;
+	sort_test(arr, key_arr, length, key_count, false);
+
+	seed = h;
+	sort_test(arr, key_arr, length, key_count, true);
 }
 
+int main() {
+	int max_length = 100000000;
+	int max_key_count = 200000;
 
+	GRAIL_SORT_TYPE* arr = new GRAIL_SORT_TYPE[max_length];
+	int* key_arr = new int[max_key_count];
 
-void main(){
-	int NMax=100000000;
-	int NMaxKey=200000;
-	SORT_TYPE *A=new SORT_TYPE[NMax];
-	int *Keys=new int[NMaxKey];
-
-	/*
-	Check(A,Keys,NMax,0,false);
-	Check(A,Keys,NMax,0,true);
-	*/
+	sort_test(arr, key_arr, max_length, 0, false);
+	sort_test(arr, key_arr, max_length, 0, true);
 
 #if 0
-	for(int u=100;u<=NMax;u*=10){
-		for(int v=2;v<=u && v<=NMaxKey;v*=2){
-			CheckTwo(A,Keys,u,v-1);
+	for(int u = 100; u <= max_length; u *= 10) {
+		for(int v = 2; v <= u && v <= max_key_count; v *= 2) {
+			test_two_sorts(arr, key_arr, u, v - 1);
 		}
 	}
 #else
-	CheckTwo(A,Keys,1000000,1023);
-	CheckTwo(A,Keys,1000000,2047);
-	CheckTwo(A,Keys,10000000,4095);
-	CheckTwo(A,Keys,10000000,8191);
-	CheckTwo(A,Keys,100000000,16383);
-	CheckTwo(A,Keys,100000000,32767);
-	CheckTwo(A,Keys,100000000,32767);
-	CheckTwo(A,Keys,100000000,16383);
-	CheckTwo(A,Keys,10000000,8191);
-	CheckTwo(A,Keys,10000000,4095);
-	CheckTwo(A,Keys,1000000,2047);
-	CheckTwo(A,Keys,1000000,1023);
-
+	test_two_sorts(arr, key_arr, 1000000, 1023);
+	test_two_sorts(arr, key_arr, 1000000, 2047);
+	test_two_sorts(arr, key_arr, 10000000, 4095);
+	test_two_sorts(arr, key_arr, 10000000, 8191);
+	test_two_sorts(arr, key_arr, 100000000, 16383);
+	test_two_sorts(arr, key_arr, 100000000, 32767);
+	test_two_sorts(arr, key_arr, 100000000, 32767);
+	test_two_sorts(arr, key_arr, 100000000, 16383);
+	test_two_sorts(arr, key_arr, 10000000, 8191);
+	test_two_sorts(arr, key_arr, 10000000, 4095);
+	test_two_sorts(arr, key_arr, 1000000, 2047);
+	test_two_sorts(arr, key_arr, 1000000, 1023);
 #endif
-}
 
+	return (0);
+}
