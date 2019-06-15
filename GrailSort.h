@@ -229,12 +229,12 @@ static void grail_smart_merge_without_buffer(GRAIL_SORT_TYPE* arr, int* left_ove
     int len1 = *left_over_len, len2 = reg_block_len;
     int frag_type = 1 - *left_over_frag; // 1 if inverted
 
-    if(len1 && GRAIL_SORT_COMPARE(arr + (len1 - 1), arr + len1) - frag_type >= 0) {
+    if(len1 != 0 && GRAIL_SORT_COMPARE(arr + (len1 - 1), arr + len1) - frag_type >= 0) {
         while(len1 != 0) {
             int found_len;
 
             //Binary search left, else search right
-            if(frag_type) found_len = grail_binary_search(arr + len1, len2, arr, false);
+            if(frag_type != 0) found_len = grail_binary_search(arr + len1, len2, arr, false);
             else found_len = grail_binary_search(arr + len1, len2, arr, true);
 
             if(found_len != 0) {
@@ -310,7 +310,7 @@ static void grail_smart_merge_with_extra_buffer(GRAIL_SORT_TYPE* arr, int* left_
 // last_len is length of last (irregular) block from stream B, that should go before a_block_count blocks.
 // last_len = 0 requires a_block_count = 0 (no irregular blocks). last_len > 0, a_block_count = 0 is possible.
 static void grail_merge_buffers_left_with_extra_buffer(GRAIL_SORT_TYPE* keys_pos, GRAIL_SORT_TYPE* midkey, GRAIL_SORT_TYPE* arr,
-        int block_count, int reg_block_len, int a_block_count, int last_len) {
+                                                       int block_count, int reg_block_len, int a_block_count, int last_len) {
     if(block_count == 0) {
         int a_block_len = a_block_count * reg_block_len;
 
@@ -340,8 +340,8 @@ static void grail_merge_buffers_left_with_extra_buffer(GRAIL_SORT_TYPE* keys_pos
     }
     rest_to_process = process_index - left_over_len;
 
-    if(last_len) {
-        if(left_over_frag) {
+    if(last_len != 0) {
+        if(left_over_frag != 0) {
             memcpy(arr + rest_to_process - reg_block_len, arr + rest_to_process, left_over_len * sizeof(GRAIL_SORT_TYPE));
 
             rest_to_process = process_index;
@@ -366,7 +366,7 @@ static void grail_merge_buffers_left_with_extra_buffer(GRAIL_SORT_TYPE* keys_pos
 // last_len is length of last (irregular) block from stream B, that should go before a_block_count blocks.
 // last_len = 0 requires a_block_count = 0 (no irregular blocks). last_len > 0, a_block_count = 0 is possible.
 static void grail_merge_buffers_left(GRAIL_SORT_TYPE* keys_pos, GRAIL_SORT_TYPE* midkey, GRAIL_SORT_TYPE* arr, int block_count,
-        int reg_block_len, bool have_buffer, int a_block_count, int last_len) {
+                                     int reg_block_len, bool have_buffer, int a_block_count, int last_len) {
 
     if(block_count == 0) {
         int total_a_len = a_block_count * reg_block_len;
@@ -393,19 +393,15 @@ static void grail_merge_buffers_left(GRAIL_SORT_TYPE* keys_pos, GRAIL_SORT_TYPE*
             left_over_len = reg_block_len;
         }
         else {
-            if(have_buffer) {
-                grail_smart_merge_with_buffer(arr + rest_to_process, &left_over_len, &left_over_frag, reg_block_len);
-            }
-            else {
-                grail_smart_merge_without_buffer(arr + rest_to_process, &left_over_len, &left_over_frag, reg_block_len);
-            }
+            if(have_buffer) grail_smart_merge_with_buffer(arr + rest_to_process, &left_over_len, &left_over_frag, reg_block_len);
+            else grail_smart_merge_without_buffer(arr + rest_to_process, &left_over_len, &left_over_frag, reg_block_len);
         }
     }
 
     rest_to_process = process_index - left_over_len;
 
-    if(last_len) {
-        if(left_over_frag) {
+    if(last_len != 0) {
+        if(left_over_frag != 0) {
             if(have_buffer) grail_multi_swap(arr + rest_to_process - reg_block_len, arr + rest_to_process, left_over_len);
 
             rest_to_process = process_index;
@@ -435,7 +431,7 @@ static void grail_build_blocks(GRAIL_SORT_TYPE* arr, int len, int build_len, GRA
 
     int extra_dist, part;
 
-    if(build_buf) {
+    if(build_buf != 0) {
         memcpy(ext_buf, arr - build_buf, build_buf * sizeof(GRAIL_SORT_TYPE));
 
         for(int dist = 1; dist < len; dist += 2) {
@@ -445,7 +441,7 @@ static void grail_build_blocks(GRAIL_SORT_TYPE* arr, int len, int build_len, GRA
             arr[dist - 3] = arr[dist - 1 + extra_dist];
             arr[dist - 2] = arr[dist - extra_dist];
         }
-        if(len % 2) arr[len - 3] = arr[len - 1];
+        if(len % 2 != 0) arr[len - 3] = arr[len - 1];
 
         arr -= 2;
 
@@ -479,7 +475,7 @@ static void grail_build_blocks(GRAIL_SORT_TYPE* arr, int len, int build_len, GRA
             grail_swap(arr + (dist - 2), arr + (dist - extra_dist));
         }
 
-        if(len % 2) grail_swap(arr + (len - 1), arr + (len - 3));
+        if(len % 2 != 0) grail_swap(arr + (len - 1), arr + (len - 3));
 
         arr -= 2;
         part = 2;
@@ -519,7 +515,7 @@ static void grail_build_blocks(GRAIL_SORT_TYPE* arr, int len, int build_len, GRA
 // keys are on the left of arr. Blocks of length build_len combined. We'll combine them into pairs
 // build_len and nkeys are powers of 2. (2 * build_len / reg_block_len) keys are guaranteed
 static void grail_combine_blocks(GRAIL_SORT_TYPE* keys_pos, GRAIL_SORT_TYPE *arr, int len, int build_len, int reg_block_len,
-        bool have_buffer, GRAIL_SORT_TYPE* ext_buf) {
+                                 bool have_buffer, GRAIL_SORT_TYPE* ext_buf) {
 
     int combined_len = len / (2 * build_len);
     int left_over = len % (2 * build_len);
@@ -529,7 +525,7 @@ static void grail_combine_blocks(GRAIL_SORT_TYPE* keys_pos, GRAIL_SORT_TYPE *arr
         left_over = 0;
     }
 
-    if(ext_buf) memcpy(ext_buf, arr - reg_block_len, reg_block_len * sizeof(GRAIL_SORT_TYPE));
+    if(ext_buf != 0) memcpy(ext_buf, arr - reg_block_len, reg_block_len * sizeof(GRAIL_SORT_TYPE));
 
     for(int i = 0; i <= combined_len; i++) {
         if(i == combined_len && left_over == 0) break;
@@ -568,23 +564,23 @@ static void grail_combine_blocks(GRAIL_SORT_TYPE* keys_pos, GRAIL_SORT_TYPE *arr
 
         if(last_len != 0) {
             while(a_block_count < block_count &&
-                    GRAIL_SORT_COMPARE( (block_pos + block_count * reg_block_len),
-                            (block_pos + (block_count - a_block_count - 1) * reg_block_len) ) < 0) {
+                  GRAIL_SORT_COMPARE( (block_pos + block_count * reg_block_len),
+                  (block_pos + (block_count - a_block_count - 1) * reg_block_len) ) < 0) {
 
                 a_block_count++;
             }
         }
 
-        if(ext_buf) {
+        if(ext_buf != 0) {
             grail_merge_buffers_left_with_extra_buffer(keys_pos, keys_pos + midkey, block_pos, block_count - a_block_count,
-                    reg_block_len, a_block_count, last_len);
+                                                       reg_block_len, a_block_count, last_len);
         }
         else {
             grail_merge_buffers_left(keys_pos, keys_pos + midkey, block_pos, block_count - a_block_count,
-                    reg_block_len, have_buffer, a_block_count, last_len);
+                                     reg_block_len, have_buffer, a_block_count, last_len);
         }
     }
-    if(ext_buf) {
+    if(ext_buf != 0) {
         for(int i = len - 1; i >= 0; i--) arr[i] = arr[i - reg_block_len];
 
         memcpy(arr - reg_block_len, ext_buf, reg_block_len * sizeof(GRAIL_SORT_TYPE));
@@ -668,7 +664,7 @@ void grail_common_sort(GRAIL_SORT_TYPE* arr, int len, GRAIL_SORT_TYPE* ext_buf, 
             }
         }
         grail_combine_blocks(arr, arr + dist, len - dist, build_len, reg_block_len, build_buf_enabled,
-                build_buf_enabled && reg_block_len <= ext_buf_len ? ext_buf : NULL);
+                             build_buf_enabled && reg_block_len <= ext_buf_len ? ext_buf : NULL);
     }
     grail_insert_sort(arr, dist);
     grail_merge_without_buffer(arr, dist, len - dist);
