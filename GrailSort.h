@@ -34,29 +34,6 @@ inline void grail_multi_swap(GRAIL_SORT_TYPE* a, GRAIL_SORT_TYPE* b, int swaps_l
     while((swaps_left--) != 0) grail_swap(a++, b++);
 }
 
-// grailShift is called when indices b and a are right next to each other.
-// Rather than continuously swapping elements, we can save time by keeping arr[b] in memory,
-// shifting everything from b down to a by 1, and then writing arr[b] into index a. This way,
-// we save extra write operations and make Grail Sort slightly faster in processes like finding
-// keys. Effectively, grailShift is a specialized Insertion Sort.
-
-// Most of the time, grailRotate is doing multiple gapped swaps instead, which is similar
-// to Comb Sort. Before, using grailRotate to sort keys would still be similar to
-// Insertion Sort, but it would instead be a variant known as Optimized Gnome Sort, a.k.a
-// Dr. Hamid Sarbazi-Azad's Stupid Sort remembering the index it came from.
-
-// I was able to generalize this in grailRotate, at the slight cost of a conditional. Nevertheless,
-// GrailSort did prove to be slightly faster over the average of a thousand tests.
-inline void grail_shift(GRAIL_SORT_TYPE* arr, int writes_left) {
-    GRAIL_SORT_TYPE temp = *(arr + 1);
-
-    while(writes_left-- != 0) {
-        *(arr + 1) = *arr;
-        arr--;
-    }
-    *(arr + 1) = temp;
-}
-
 inline void grail_insert_sort(GRAIL_SORT_TYPE *arr, int len){
     for(int i = 1; i < len; i++) {
         int pos = i - 1;
@@ -73,15 +50,13 @@ inline void grail_insert_sort(GRAIL_SORT_TYPE *arr, int len){
 static void grail_rotate(GRAIL_SORT_TYPE* arr, int len_a, int len_b) {
     while(len_a != 0 && len_b != 0) {
         if(len_a <= len_b) {
-            if((arr + len_a) - arr == 1) grail_shift(arr, len_a);
-            else grail_multi_swap(arr, arr + len_a, len_a);
+            grail_multi_swap(arr, arr + len_a, len_a);
 
             arr += len_a;
             len_b -= len_a;
         }
         else {
-            if((arr + len_a) - (arr + (len_a - len_b)) == 1) grail_shift(arr + (len_a - len_b), len_b);
-            else grail_multi_swap(arr + (len_a - len_b), arr + len_a, len_b);
+            grail_multi_swap(arr + (len_a - len_b), arr + len_a, len_b);
 
             len_a -= len_b;
         }
