@@ -1,7 +1,7 @@
 /********* Grail sorting *********************************/
 /*                                                       */
 /* (c) 2013 by Andrey Astrelin                           */
-/*                                                       */
+/* Refactored by MusicTheorist                           */
 /*                                                       */
 /* Stable sorting that works in O(N*log(N)) worst time   */
 /* and uses O(1) extra memory                            */
