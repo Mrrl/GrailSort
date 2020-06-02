@@ -9,6 +9,7 @@ The sort begins by attempting to collect (2 * sqrt(n)) unique elements in the ar
 Choosing the length O(sqrt(n)) for blocks and key-buffers allows for assistance from simple O(n^2) algorithms, including Insertion and Selection Sort, whose time complexities equate to O(n^2 * sqrt(n)), simplifying down to an optimal O(n) time. 'Situationally optimal' complexities are of particular importance when an array to be sorted does not have (2 * sqrt(n)) unique elements. Without enough 'keys', Grailsort may not have either a large enough buffer for 'local merges' or enough 'block swapping' tags to guarantee stability, or both. In these cases, normally suboptimal merge sorts based on rotations are instead used to still achieve a stable and O(n log n) worst-case sort, without using any extra space.
 
 =========
+
 Original README by Andrey Astrelin:
 
 Stable In-place sorting in O(n*log(n)) worst time.
