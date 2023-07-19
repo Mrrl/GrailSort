@@ -24,6 +24,7 @@ Example
 =======
 
 C Language:
+
 ```c
 #include<stdio.h>
 
@@ -50,7 +51,9 @@ int main(){
 }
 ```
 
+
 C++ Language:
+
 ```cpp
 #include<iostream>
 #include<vector>
