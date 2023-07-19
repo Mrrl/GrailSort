@@ -48,6 +48,7 @@ int main(){
     for(int i=0;i<sz;i++) printf("%d ", a[i]);
     return 0;
 }
+```
 
 C++ Language:
 ```cpp
@@ -65,5 +66,5 @@ int main(){
     for(auto p:a) cout<<p<<" ";
     return 0;
 }
-
+```
 
