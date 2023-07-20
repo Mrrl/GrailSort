@@ -1,6 +1,11 @@
 GrailSort
 =========
 
+![Lang](https://img.shields.io/badge/language-c++-green.svg)
+![C++ Standard](https://img.shields.io/badge/c++-14-yellow.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
+
 Stable In-place sorting in O(n*log(n)) worst time.
 
 This algorithm is based on ideas from the article
@@ -11,24 +16,58 @@ This algorithm is based on ideas from the article
 To use sorting define type SORT_TYPE and comparison function SORT_CMP and include "GrailSort.h" file.
 Code in C-compatible.
 
-Algorithms with some external memory are also implemented.
-
-GrailSortWithBuffer uses fixed buffer of 512 elements (allocated in the stack).
-
-GrailSortWithDynBuffer uses dynamiclly allocated buffer less than 2*sqrt(N) elements (allocated in heap).
-
-Below there is a table of times for softing of arrays of 8-byte structures. Three versions of algorithm are compared with std::stable_sort().
-Array of 1, 10 and 100 million structures were generated with two different numbers of different keys. First (the less) is the worst case for the algorithm - when number of keys is not enough for two internal buffers.
-Second number is enough for fast version of algorithms.
-
-Time is in milliseconds (compiled in MSVS 2013). Second number is time relative to result of std::stable_sort on the same data.
-
-    size             stable_sort  no buffer  static buffer   dynamic buffer 
-    1M, 1023 keys        200     218 (1.09)     224 (1.12)      203 (1.02)
-    1M, 2047 keys        195     164 (0.84)     162 (0.83)      157 (0.81)
-    10M, 4095 keys      2220    2765 (1.24)    2790 (1.25)     2784 (1.25)
-    10M, 8191 keys      2233    1964 (0.88)    1863 (0.83)     1718 (0.77)
-    100M, 16383 keys   24750   33652 (1.36)   33708 (1.36)    33338 (1.35)           
-    100M, 32767 keys   25230   22852 (0.90)   21331 (0.84)    19442 (0.77)
+Or include "grailsort.hpp" file that provides four sorting functions that are consistent with the std::sort interface (for c++14 or later).
 
 There is a similar project at https://github.com/BonzaiThePenguin/WikiSort . A different algorithm based on the same idea is implemented there.
+
+Example
+=======
+
+C Language:
+
+```c
+#include<stdio.h>
+
+// define SORT_TYPE and SORT_CMP.
+#define SORT_TYPE int
+
+int SORT_CMP(int *a, int *b){
+    return (*a > *b) - (*a < *b);
+}
+
+#include "GrailSort.h"
+
+int arr[]={8,5,42,5,5,11,6,-9,36,326,346};
+int main(){
+    int sz=sizeof(arr)/sizeof(int);
+
+    GrailSort(arr, sz); // Sort In-Place.
+    // GrailSortWithBuffer(arr, sz); // Sort With Constant Buffer (512 items).
+    // GrailSortWithDynBuffer(arr, sz); // Sort With Dynamic Buffer.
+    // RecStableSort(arr, sz); // Classic Rotate In-Place Mergesort.
+
+    for(int i=0;i<sz;i++) printf("%d ", a[i]);
+    return 0;
+}
+```
+
+
+C++ Language:
+
+```cpp
+#include<iostream>
+#include<vector>
+#include "grailsort.hpp"
+
+using namespace std;
+vector<int> a{8,5,42,5,5,11,6,-9,36,326,346};
+int main(){
+    grailsort::grail_sort(a.begin(), a.end()); // Sort In-Place.
+    // grailsort::grail_sort_buffer(a.begin(), a.end()); // Sort With Constant Buffer (512 items).
+    // grailsort::grail_sort_dyn_buffer(a.begin(), a.end()); // Sort With Dynamic Buffer.
+    // grailsort::rec_stable_sort(a.begin(), a.end()); // Classic Rotate In-Place Mergesort.
+    for(auto p:a) cout<<p<<" ";
+    return 0;
+}
+```
+
