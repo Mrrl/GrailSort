@@ -30,6 +30,13 @@ namespace grailsort {
 		template<typename Iter>
 		using iter_value = typename std::iterator_traits<Iter>::value_type;
 
+		template<typename Iter, typename Comp>
+		int grail_cmp(Iter a, Iter b, Comp comp) {
+			if (comp(*a, *b)) return -1;
+			else if (comp(*b, *a)) return 1;
+			else return 0;
+		}
+
 		template<typename Iter>
 		inline void grail_swap1(Iter a, Iter b) {
 			iter_value<Iter> c = *a;
@@ -61,7 +68,7 @@ namespace grailsort {
 			int a = -1, b = len, c;
 			while (a < b - 1) {
 				c = a + ((b - a) >> 1);
-				if (comp(arr + c, key) >= 0) b = c;
+				if (grail_cmp(arr + c, key, comp) >= 0) b = c;
 				else a = c;
 			}
 			return b;
@@ -72,7 +79,7 @@ namespace grailsort {
 			int a = -1, b = len, c;
 			while (a < b - 1) {
 				c = a + ((b - a) >> 1);
-				if (comp(arr + c, key) > 0) b = c;
+				if (grail_cmp(arr + c, key, comp) > 0) b = c;
 				else a = c;
 			}
 			return b;
@@ -85,7 +92,7 @@ namespace grailsort {
 			int u = 1, r;
 			while (u < len && h < nkeys) {
 				r = grail_BinSearchLeft(arr + h0, h, arr + u, comp);
-				if (r == h || comp(arr + u, arr + (h0 + r)) != 0) {
+				if (r == h || grail_cmp(arr + u, arr + (h0 + r), comp) != 0) {
 					grail_rotate(arr + h0, h, u - (h0 + h));
 					h0 = u - h;
 					grail_rotate(arr + (h0 + r), h - r, 1);
@@ -111,7 +118,7 @@ namespace grailsort {
 					if (len2 == 0) break;
 					do {
 						arr++; len1--;
-					} while (len1 && comp(arr, arr + len1) <= 0);
+					} while (len1 && grail_cmp(arr, arr + len1, comp) <= 0);
 				}
 			}
 			else {
@@ -124,7 +131,7 @@ namespace grailsort {
 					if (len1 == 0) break;
 					do {
 						len2--;
-					} while (len2 && comp(arr + len1 - 1, arr + len1 + len2 - 1) <= 0);
+					} while (len2 && grail_cmp(arr + len1 - 1, arr + len1 + len2 - 1, comp) <= 0);
 				}
 			}
 		}
@@ -134,7 +141,7 @@ namespace grailsort {
 		static void grail_MergeLeft(Iter arr, int L1, int L2, int M, Comp comp) {
 			int p0 = 0, p1 = L1; L2 += L1;
 			while (p1 < L2) {
-				if (p0 == L1 || comp(arr + p0, arr + p1) > 0) {
+				if (p0 == L1 || grail_cmp(arr + p0, arr + p1, comp) > 0) {
 					grail_swap1(arr + (M++), arr + (p1++));
 				}
 				else {
@@ -149,7 +156,7 @@ namespace grailsort {
 			int p0 = L1 + L2 + M - 1, p2 = L1 + L2 - 1, p1 = L1 - 1;
 
 			while (p1 >= 0) {
-				if (p2 < L1 || comp(arr + p1, arr + p2)>0) {
+				if (p2 < L1 || grail_cmp(arr + p1, arr + p2, comp)>0) {
 					grail_swap1(arr + (p0--), arr + (p1--));
 				}
 				else {
@@ -164,7 +171,7 @@ namespace grailsort {
 			int p0 = -lkeys, p1 = 0, p2 = *alen1, q1 = p2, q2 = p2 + len2;
 			int ftype = 1 - *atype;  // 1 if inverted
 			while (p1 < q1 && p2 < q2) {
-				if (comp(arr + p1, arr + p2) - ftype < 0) grail_swap1(arr + (p0++), arr + (p1++));
+				if (grail_cmp(arr + p1, arr + p2, comp) - ftype < 0) grail_swap1(arr + (p0++), arr + (p1++));
 				else grail_swap1(arr + (p0++), arr + (p2++));
 			}
 			if (p1 < q1) {
@@ -185,7 +192,7 @@ namespace grailsort {
 			len1 = *alen1;
 			len2 = _len2;
 			ftype = 1 - *atype;
-			if (len1 && comp(arr + (len1 - 1), arr + len1) - ftype >= 0) {
+			if (len1 && grail_cmp(arr + (len1 - 1), arr + len1, comp) - ftype >= 0) {
 				while (len1) {
 					h = ftype ? grail_BinSearchLeft(arr + len1, len2, arr, comp) : grail_BinSearchRight(arr + len1, len2, arr, comp);
 					if (h != 0) {
@@ -199,7 +206,7 @@ namespace grailsort {
 					}
 					do {
 						arr++; len1--;
-					} while (len1 && comp(arr, arr + len1) - ftype < 0);
+					} while (len1 && grail_cmp(arr, arr + len1, comp) - ftype < 0);
 				}
 			}
 			*alen1 = len2; *atype = ftype;
@@ -212,7 +219,7 @@ namespace grailsort {
 		static void grail_MergeLeftWithXBuf(Iter arr, int L1, int L2, int M, Comp comp) {
 			int p0 = 0, p1 = L1; L2 += L1;
 			while (p1 < L2) {
-				if (p0 == L1 || comp(arr + p0, arr + p1) > 0) arr[M++] = arr[p1++];
+				if (p0 == L1 || grail_cmp(arr + p0, arr + p1, comp) > 0) arr[M++] = arr[p1++];
 				else arr[M++] = arr[p0++];
 			}
 			if (M != p0) while (p0 < L1) arr[M++] = arr[p0++];
@@ -223,7 +230,7 @@ namespace grailsort {
 			int p0 = -lkeys, p1 = 0, p2 = *alen1, q1 = p2, q2 = p2 + len2;
 			int ftype = 1 - *atype;  // 1 if inverted
 			while (p1 < q1 && p2 < q2) {
-				if (comp(arr + p1, arr + p2) - ftype < 0) arr[p0++] = arr[p1++];
+				if (grail_cmp(arr + p1, arr + p2, comp) - ftype < 0) arr[p0++] = arr[p1++];
 				else arr[p0++] = arr[p2++];
 			}
 			if (p1 < q1) {
@@ -252,11 +259,11 @@ namespace grailsort {
 			}
 
 			lrest = lblock;
-			frest = comp(keys, midkey) < 0 ? 0 : 1;
+			frest = grail_cmp(keys, midkey, comp) < 0 ? 0 : 1;
 			pidx = lblock;
 			for (cidx = 1; cidx < nblock; cidx++, pidx += lblock) {
 				prest = pidx - lrest;
-				fnext = comp(keys + cidx, midkey) < 0 ? 0 : 1;
+				fnext = grail_cmp(keys + cidx, midkey, comp) < 0 ? 0 : 1;
 				if (fnext == frest) {
 					std::copy_n(arr + prest, lrest, arr + prest - lblock);
 					prest = pidx;
@@ -300,7 +307,7 @@ namespace grailsort {
 				std::copy_n(arr - kbuf, kbuf, extbuf);
 				for (m = 1; m < L; m += 2) {
 					u = 0;
-					if (comp(arr + (m - 1), arr + m) > 0) u = 1;
+					if (grail_cmp(arr + (m - 1), arr + m, comp) > 0) u = 1;
 					arr[m - 3] = arr[m - 1 + u];
 					arr[m - 2] = arr[m - u];
 				}
@@ -327,7 +334,7 @@ namespace grailsort {
 			else {
 				for (m = 1; m < L; m += 2) {
 					u = 0;
-					if (comp(arr + (m - 1), arr + m) > 0) u = 1;
+					if (grail_cmp(arr + (m - 1), arr + m, comp) > 0) u = 1;
 					grail_swap1(arr + (m - 3), arr + (m - 1 + u));
 					grail_swap1(arr + (m - 2), arr + (m - u));
 				}
@@ -376,11 +383,11 @@ namespace grailsort {
 			}
 
 			lrest = lblock;
-			frest = comp(keys, midkey) < 0 ? 0 : 1;
+			frest = grail_cmp(keys, midkey, comp) < 0 ? 0 : 1;
 			pidx = lblock;
 			for (cidx = 1; cidx < nblock; cidx++, pidx += lblock) {
 				prest = pidx - lrest;
-				fnext = comp(keys + cidx, midkey) < 0 ? 0 : 1;
+				fnext = grail_cmp(keys + cidx, midkey, comp) < 0 ? 0 : 1;
 				if (fnext == frest) {
 					if (havebuf) grail_swapN(arr + prest - lblock, arr + prest, lrest);
 					prest = pidx;
@@ -420,7 +427,7 @@ namespace grailsort {
 		static void grail_SortIns(Iter arr, int len, Comp comp) {
 			int i, j;
 			for (i = 1; i < len; i++) {
-				for (j = i - 1; j >= 0 && comp(arr + (j + 1), arr + j) < 0; j--) grail_swap1(arr + j, arr + (j + 1));
+				for (j = i - 1; j >= 0 && grail_cmp(arr + (j + 1), arr + j, comp) < 0; j--) grail_swap1(arr + j, arr + (j + 1));
 			}
 		}
 
@@ -429,7 +436,7 @@ namespace grailsort {
 			int m, u, h, p0, p1, rest;
 			for (m = 1; m < L; m += 2) {
 				u = 0;
-				if (comp(arr + m - 1, arr + m) > 0) grail_swap1(arr + (m - 1), arr + m);
+				if (grail_cmp(arr + m - 1, arr + m, comp) > 0) grail_swap1(arr + (m - 1), arr + m);
 			}
 			for (h = 2; h < L; h *= 2) {
 				p0 = 0;
@@ -468,8 +475,8 @@ namespace grailsort {
 				for (u = 1; u < NBlk; u++) {
 					p = u - 1;
 					for (v = u; v < NBlk; v++) {
-						kc = comp(arr1 + p * lblock, arr1 + v * lblock);
-						if (kc > 0 || (kc == 0 && comp(keys + p, keys + v) > 0)) p = v;
+						kc = grail_cmp(arr1 + p * lblock, arr1 + v * lblock, comp);
+						if (kc > 0 || (kc == 0 && grail_cmp(keys + p, keys + v, comp) > 0)) p = v;
 					}
 					if (p != u - 1) {
 						grail_swapN(arr1 + (u - 1) * lblock, arr1 + p * lblock, lblock);
@@ -480,7 +487,7 @@ namespace grailsort {
 				nbl2 = llast = 0;
 				if (b == M) llast = lrest % lblock;
 				if (llast != 0) {
-					while (nbl2 < NBlk && comp(arr1 + NBlk * lblock, arr1 + (NBlk - nbl2 - 1) * lblock) < 0) nbl2++;
+					while (nbl2 < NBlk && grail_cmp(arr1 + NBlk * lblock, arr1 + (NBlk - nbl2 - 1) * lblock, comp) < 0) nbl2++;
 				}
 				if (xbuf) grail_MergeBuffersLeftWithXBuf(keys, keys + midkey, arr1, NBlk - nbl2, lblock, nbl2, llast, comp);
 				else grail_MergeBuffersLeft(keys, keys + midkey, arr1, NBlk - nbl2, lblock, havebuf, nbl2, llast, comp);
@@ -590,10 +597,10 @@ namespace grailsort {
 			if (L1 < L2) K = L1 + L2 / 2;
 			else K = L1 / 2;
 			k1 = k2 = grail_BinSearchLeft(A, L1, A + K, comp);
-			if (k2 < L1 && comp(A + k2, A + K) == 0) k2 = grail_BinSearchRight(A + k1, L1 - k1, A + K, comp) + k1;
+			if (k2 < L1 && grail_cmp(A + k2, A + K, comp) == 0) k2 = grail_BinSearchRight(A + k1, L1 - k1, A + K, comp) + k1;
 			m1 = grail_BinSearchLeft(A + L1, L2, A + K, comp);
 			m2 = m1;
-			if (m2 < L2 && comp(A + L1 + m2, A + K) == 0) m2 = grail_BinSearchRight(A + L1 + m1, L2 - m1, A + K, comp) + m1;
+			if (m2 < L2 && grail_cmp(A + L1 + m2, A + K, comp) == 0) m2 = grail_BinSearchRight(A + L1 + m1, L2 - m1, A + K, comp) + m1;
 			if (k1 == k2) grail_rotate(A + k2, L1 - k2, m2);
 			else {
 				grail_rotate(A + k1, L1 - k1, m1);
@@ -609,7 +616,7 @@ namespace grailsort {
 
 			for (m = 1; m < L; m += 2) {
 				u = 0;
-				if (comp(arr + m - 1, arr + m) > 0) grail_swap1(arr + (m - 1), arr + m);
+				if (grail_cmp(arr + m - 1, arr + m, comp) > 0) grail_swap1(arr + (m - 1), arr + m);
 			}
 			for (h = 2; h < L; h *= 2) {
 				p0 = 0;
@@ -624,50 +631,30 @@ namespace grailsort {
 		}
 	}
 
-	template<typename Compare>
-	struct comperator {
-		Compare compare;
-
-		explicit comperator(Compare&& comp) :
-			compare(std::forward<Compare>(comp))
-		{}
-
-		template<typename T, typename U>
-		int operator()(T* lhs, U* rhs)
-		{
-			if (compare(*lhs, *rhs)) {
-				return -1;
-			}
-			if (compare(*rhs, *lhs)) {
-				return 1;
-			}
-			return 0;
-		}
-	};
 
 	// Custom Comperator
 	template<typename RandomAccessIterator, typename Comp>
 	void grail_sort(RandomAccessIterator first, RandomAccessIterator last, Comp comp) {
 		_internal::GrailSort(
-			first, (int)std::distance(first, last), comperator<Comp>(std::move(comp)));
+			first, (int)std::distance(first, last), comp);
 	}
 
 	template<typename RandomAccessIterator, typename Comp>
 	void grail_sort_buffer(RandomAccessIterator first, RandomAccessIterator last, Comp comp) {
 		_internal::GrailSortWithBuffer(
-			first, (int)std::distance(first, last), comperator<Comp>(std::move(comp)));
+			first, (int)std::distance(first, last), comp);
 	}
 
 	template<typename RandomAccessIterator, typename Comp>
 	void grail_sort_dyn_buffer(RandomAccessIterator first, RandomAccessIterator last, Comp comp) {
 		_internal::GrailSortWithDynBuffer(
-			first, (int)std::distance(first, last), comperator<Comp>(std::move(comp)));
+			first, (int)std::distance(first, last), comp);
 	}
 
 	template<typename RandomAccessIterator, typename Comp>
 	void rec_stable_sort(RandomAccessIterator first, RandomAccessIterator last, Comp comp) {
 		_internal::RecStableSort(
-			first, (int)std::distance(first, last), comperator<Comp>(std::move(comp)));
+			first, (int)std::distance(first, last), comp);
 	}
 
 
